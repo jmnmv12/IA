@@ -6,7 +6,7 @@ def concatenate(list_a,list_b):
     return c
 
 
-def union(list_a,list_b):
+def union(list_a,list_b): #adapt to strategy
     
 
     list_new=[]
