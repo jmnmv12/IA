@@ -57,19 +57,27 @@ class SearchProblem:
 
 # Nos de uma arvore de pesquisa
 class SearchNode:
-    def __init__(self,state,parent,cost,heuristic_cost): 
+    def __init__(self,state,parent,cost,heuristic_cost,action=None): 
         self.state = state
         self.parent = parent
         if(parent==None):
             self.depth=0
             self.cumulative_cost=cost
             self.A_star_cost=cost+heuristic_cost
+            self.action=action
+
+            
 
         else:
             self.depth=self.parent.depth+1
             self.cumulative_cost=parent.cumulative_cost+cost
             self.A_star_cost=parent.cumulative_cost+cost+heuristic_cost
+            if(parent.action is not None):
+                self.action=parent.action+action
+            else:
+                self.action=action
 
+        #print(self.action)
         self.heuristic_cost=heuristic_cost
         
 
@@ -92,10 +100,12 @@ class SearchTree:
         self.solution_length=0
         self.n_terminal_nodes=0
         self.n_nonterminal_nodes=0
+        self.total_nodes=0
         self.medium_ramification=0
         self.solution_cost=0
         self.cumulative_depth=0
         self.average_depth=0
+        self.plan=None
         self.higher_cumulative_cost_node=[root]
         
 
@@ -117,16 +127,15 @@ class SearchTree:
             if self.problem.goal_test(node.state):#verifica se satiafaz objetivo
                 self.solution_length=node.depth
                 self.solution_cost=node.cumulative_cost
-                #print(self.higher_cumulative_cost_node[0].cumulative_cost)
+                self.n_terminal_nodes=len(self.open_nodes)+1
+                self.n_nonterminal_nodes=self.total_nodes-len(self.open_nodes)-1
+                
                 
                 self.average_depth=self.cumulative_depth/(self.n_nonterminal_nodes+self.n_terminal_nodes)
-                #print(self.average_depth)
                 
-                #print(self.solution_length)
-                #print(self.n_terminal_nodes)
-                #print(self.n_nonterminal_nodes)
-                self.medium_ramification=((self.n_nonterminal_nodes+self.n_terminal_nodes)-1)/self.n_nonterminal_nodes
-                #print(self.medium_ramification)
+                
+                self.medium_ramification=(self.total_nodes-1)/self.n_nonterminal_nodes
+                self.plan=node.action
                 return self.get_path(node)
             
             if any( n.cumulative_cost<node.cumulative_cost for n in self.higher_cumulative_cost_node):
@@ -138,25 +147,30 @@ class SearchTree:
             if(self.strategy=='depth' and self.limit is not None and node.depth>self.limit): # A verificaçao tem de ser feita antes de expandir o no porque os nos filhos podem ter soluçao mas podem nao ser bons para expandir
                 continue
             lnewnodes = []#se nao cria a lista de filhos
-            self.n_nonterminal_nodes+=1
+            #self.n_nonterminal_nodes+=1
             result=self.problem.domain.actions(node.state)
-            self.n_terminal_nodes+=len(result)-1
+            
+            ''''if(node.parent is None):
+                self.n_terminal_nodes+=len(result)
+            else:
+                self.n_terminal_nodes+=len(result)-1'''
             for a in result:
+                
                 newstate = self.problem.domain.result(node.state,a) #para cada ação cria um novo estado
                 state_cost=self.problem.domain.cost(newstate,a)
                 heuristic_cost=self.problem.domain.heuristic(newstate,self.problem.goal)
-
-                my_node=SearchNode(newstate,node,state_cost,heuristic_cost)
+                action=str(a).split("(")[0]+str(a.args)
+                my_node=SearchNode(newstate,node,state_cost,heuristic_cost,action)
                 node_depth=my_node.depth
                 
                 self.cumulative_depth+=node_depth
+                self.total_nodes+=1
+
                 #print(self.get_path(node))
                 if(newstate not in self.get_path(node)):                    
                     
                     lnewnodes += [my_node]
-                        #self.visited.add(newstate)
-            #print(lnewnodes)
-            #print(self.visited)
+             
             self.add_to_open(lnewnodes)
         return None
 
@@ -168,39 +182,40 @@ class SearchTree:
             self.open_nodes[:0] = lnewnodes
         elif self.strategy == 'uniform':
             sorted_list=sorted(lnewnodes, key=lambda x: x.cumulative_cost)
-            self.open_nodes=self.union(sorted_list,self.open_nodes)
+            self.open_nodes=self.mergeSortedLists(sorted_list,self.open_nodes,'uniform')
             
         elif self.strategy == 'greedy':
-            self.open_nodes[:0] = sorted(lnewnodes, key=lambda x: x.heuristic_cost)
+            sorted_list=sorted(lnewnodes, key=lambda x: x.heuristic_cost)
+            self.open_nodes=self.mergeSortedLists(sorted_list,self.open_nodes,'greedy')
+
         elif self.strategy == 'A_star':
-            self.open_nodes[:0] = sorted(lnewnodes, key=lambda x: x.A_star_cost )
-
-    def concatenate(self,list_a,list_b):
-        if list_a==[]:
-            return list_b
-        c=self.concatenate(list_a[1:],list_b)
-        c[:0]=[list_a[0]]
-        return c
+            sorted_list= sorted(lnewnodes, key=lambda x: x.A_star_cost )
+            self.open_nodes=self.mergeSortedLists(sorted_list,self.open_nodes,'A_star')
 
 
-    def union(self,list_a,list_b):
-        
+    
 
-        list_new=[]
-        if(list_a==[] and list_b==[]):
-            return list_new
-        elif list_a==[] and list_b!=[]:
-            return list_new + list_b
-        elif list_b==[] and list_a!=[]:
-            return list_new + list_a
-        else:
-            if list_a[0].cumulative_cost<list_b[0].cumulative_cost:
-                list_new.append(list_a[0])
-                list_new=self.concatenate(list_new,self.union(list_a[1:],list_b))
-            elif list_b[0].cumulative_cost<=list_a[0].cumulative_cost:
-                list_new.append(list_b[0])
-                list_new=self.concatenate(list_new,self.union(list_a,list_b[1:]))
-            
-        return list_new       
+    def mergeSortedLists(self,a, b,strategy):
+        l = []
+        while a and b:
+            if(strategy=='uniform'):
+                if a[0].cumulative_cost < b[0].cumulative_cost:
+                    l.append(a.pop(0))
+                else:
+                    l.append(b.pop(0))
+            elif (strategy=='greedy'):
+                if a[0].heuristic_cost < b[0].heuristic_cost:
+                    l.append(a.pop(0))
+                else:
+                    l.append(b.pop(0))
+            elif (strategy=='A_star'):
+                if a[0].A_star_cost < b[0].A_star_cost:
+                    l.append(a.pop(0))
+                else:
+                    l.append(b.pop(0))
+        return l + a + b
+
+
+     
 
 
