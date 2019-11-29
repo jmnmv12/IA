@@ -1,4 +1,4 @@
-from itertools import product 
+
 
 class BayesNet:
 
@@ -23,43 +23,6 @@ class BayesNet:
                 if mothers.issubset(conjunction):
                     prob*=(p if val else 1-p)
         return prob
-
-    def ancestors(self,var):
-       
-
-        all_frozen_set=[i for i in list(self.dependencies[var].keys())]
-        all_ancestors=set()
-        if(all_frozen_set==[frozenset()]):
-            #print("hello")
-            return []
-        for i in all_frozen_set:
-            for key in list(dict(i).keys()):
-                all_ancestors.add(key)
-
-        for ancestor in all_ancestors:
-            all_ancestors=list(all_ancestors)
-            all_ancestors+=self.ancestors(ancestor)
-        return list(set(all_ancestors))
-        
-
-    def conjunction(self,listvars):
-
-        all_conjunctions=list(product(listvars,[True,False]))
-        print(f"List Vars: {all_conjunctions}")
-
-        for j in all_conjunctions:
-            for i in all_conjunctions:
-                pass
-
-        # TODO use zip
-
-
-
-
-
-    def individual_prob(self,var):
-        var_ancestors=self.ancestors(var)
-        conjunctions=self.conjunction(var_ancestors)
 
 
 # Footnote 1:

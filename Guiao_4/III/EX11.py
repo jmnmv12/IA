@@ -33,5 +33,5 @@ conjunction_false = [('wol',False),('uwp',False),('aue',False),('wf',False),('nh
 
 print(f"All True: {bn.jointProb(conjunction_true)}")
 print(f"All False: {bn.jointProb(conjunction_false)}")
-
+print(bn.individual_prob('hmf'))
 

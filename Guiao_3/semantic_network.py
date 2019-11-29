@@ -161,23 +161,7 @@ class SemanticNetwork:
         
         return None
 
-    def query(self,e1,relation=None):
-        if relation is None:
-            result=([ d for d in self.declarations if d.relation.entity1==e1 ])
-            parents=set([ d for d in self.declarations if (d.relation.name=='subtype' or d.relation.name=='member') and d.relation.entity1==e1])
-            #print(result)
-            
-                #pass
-            #print(f"Result {result} Parents {parents}")
-            #print(f"Parents: {result}")
-            
-            for p in parents:
-                check=self.query(p.relation.entity2,None)
-                #print(f"ResultV3 {check}")
-                if check :
-                    return result+check
-            print("---")
-            #print(f"Parents: {parents} result {check}")
+   
 
     def query_down(self,entity,relation,skip=True):
         suc=[self.query_down(d.relation.entity1,relation,skip=False) for d in self.declarations if (isinstance(d.relation,Member) or isinstance(d.relation,Subtype)) and d.relation.entity2==entity]     
@@ -220,6 +204,24 @@ class SemanticNetwork:
                     break
             return l
     
+    def query_cancel(self, entity, relation):
+        ancestors = [
+            self.query_cancel(d.relation.entity2, relation)
+            for d in self.declarations
+            if d.relation.entity1 == entity
+            and (isinstance(d.relation, Member) or isinstance(d.relation, Subtype))
+        ]
+
+        local_decl = self.query_local(e1=entity, rel=relation)
+
+        return [
+            item
+            for sublist in ancestors
+            for item in sublist
+            if item.relation.name not in [d.relation.name for d in local_decl]
+        ] + local_decl
+
+
     def query_assoc_value(self,entity,relation):
         local=self.query_local(e1=entity,rel=relation)
 
@@ -234,8 +236,32 @@ class SemanticNetwork:
             for v,count in c.most_common():
                 print(count/len(local))
                 
+    def query2(self, entity, relation=None):
+        ancestors = [
+            self.query2(d.relation.entity2, relation)
+            for d in self.declarations
+            if d.relation.entity1 == entity
+            and (isinstance(d.relation, Member) or isinstance(d.relation, Subtype))
+        ]
 
+        return [
+            item
+            for sublist in ancestors
+            for item in sublist
+            if isinstance(item.relation, Association)
+        ] + self.query_local(e1=entity, rel=relation)
 
+    def query(self, entity, relation=None):
+        ancestors = [
+            self.query(d.relation.entity2, relation)
+            for d in self.declarations
+            if d.relation.entity1 == entity
+            and (isinstance(d.relation, Member) or isinstance(d.relation, Subtype))
+        ]
+
+        return [item for sublist in ancestors for item in sublist] + self.query_local(
+            e1=entity, rel=relation
+        )
         
 
 

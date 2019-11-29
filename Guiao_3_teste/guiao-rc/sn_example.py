@@ -5,11 +5,11 @@
 # Redes semanticas
 # -- Exemplo
 # 
-# Introducao a Inteligencia Artificial
+# Inteligencia Artificial & Introducao a Inteligencia Artificial
 # DETI / UA
 #
-# (c) Luis Seabra Lopes, 2012-2018
-# 2018/10/22
+# (c) Luis Seabra Lopes, 2012-2019
+# 2019/10/20
 #
 
 
@@ -79,25 +79,45 @@ z.insert(Declaration('simao',Association('homem','gosta','couves')))
 z.insert(Declaration('damasio', AssocOne('socrates','pai','sofronisco')))
 z.insert(Declaration('darwin', AssocOne('socrates','pai','pericles')))
 z.insert(Declaration('descartes', AssocOne('socrates','pai','sofronisco')))
-print(z)
-print(z.show_all_types())
-print(z.get_local_associations('socrates'))
-print(z.show_user_declarations('darwin'))
-print(z.count_user_declarations('darwin'))
-print(z.query_local_assoc('socrates','pai'))
-print(z.query_local_assoc('socrates','pulsacao'))
-print(z.query_local_assoc('homem','gosta'))
-print(f"EX 16  {z.query_assoc_value('homem','temperatura')}")
-
-
-'''print(z.user_association_declaration('socrates'))
-print(z.predecessor('vertebrado','filosofo'))
+#print(z)
+print("--EX 1--")
+print(z.show_assoc())
+print("--EX 2--")
+print(z.show_members())
+print("--EX 3--")
+print(z.show_users())
+print("--EX 4--")
+print(z.show_types())
+print("--EX 5--")
+print(z.local_assoc('mamifero'))
+print("--EX 6--")
+print(z.user_declared_rel('descartes'))
+print("--EX 7--")
+print(z.n_user_declared_rel('descartes'))
+print("--EX 8--")
+print(z.tuple_local_assoc('mamifero'))
+print("--EX 9--")
+print(z.predecessor('vertebrado','socrates'))
+print("--EX 10--")
 print(z.predecessor_path('vertebrado','socrates'))
-print(z.query('socrates',None))
-'''
+print("--EX 11 a)--")
+z.query('socrates',True,'altura')
+z.show_query_result()
+print("--EX 11 b)--")
+z.query2('socrates',True)
+z.show_query_result()
+print("--EX 12--")
+print(z.query_cancel('socrates','altura'))
+print("--EX 13--")
 print(z.query_down('mamifero','altura'))
-'''print(z.query_induce('mamifero','altura'))'''
+print("--EX 14--")
+print(z.query_induce('mamifero','altura'))
+print("--EX 15--")
+print(z.query_local_assoc('socrates','pai'))
+print("==========")
+print(z.query_local_assoc('socrates','pulsacao'))
+print("==========")
+print(z.query_local_assoc('homem','gosta'))
+print("--EX 16--")
 
-
-
-
+print(z.query_assoc_value('homem','temperatura'))
